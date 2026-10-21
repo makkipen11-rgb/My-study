@@ -1,0 +1,273 @@
+
+
+<!DOCTYPE html>
+
+<html lang="ja">
+
+<head>
+
+<meta charset="UTF-8">
+
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+
+<meta name="theme-color" content="#090909">
+
+<title>MY STUDY</title>
+
+<style>
+
+*{box-sizing:border-box}
+
+body{margin:0;background:#090909;color:#f5f5f5;font-family:-apple-system,sans-serif;padding:18px 15px 95px}
+
+header{font-weight:900;letter-spacing:3px;font-size:23px;padding:12px 0 20px;border-bottom:1px solid #333}
+
+h1{font-size:29px;margin:25px 0 5px}h2{font-size:17px}
+
+.muted,small{color:#999;font-size:12px}
+
+.card,.stat{background:#151515;border:1px solid #303030;border-radius:16px;padding:16px;margin:13px 0}
+
+.stats{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+
+.big{font-size:27px;font-weight:800;margin-top:8px}
+
+label{display:block;color:#aaa;font-size:12px;margin:12px 0 6px}
+
+input,select{width:100%;background:#090909;color:white;border:1px solid #444;border-radius:9px;padding:12px;font-size:16px}
+
+input[type=checkbox]{width:20px;height:20px;accent-color:white}
+
+button{background:#f4f4f4;color:#080808;border:0;border-radius:9px;padding:11px;font-weight:700;font-size:14px}
+
+.secondary{background:#292929;color:white;border:1px solid #444}
+
+.danger{background:#3b2020;color:#ffc5c5}
+
+.actions{display:flex;gap:8px;margin-top:12px}.actions button{flex:1}
+
+.page{display:none}.page.active{display:block}
+
+.item{display:flex;align-items:center;gap:10px;padding:11px 0;border-bottom:1px solid #303030}
+
+.item span{flex:1;overflow-wrap:anywhere}.item button{padding:7px 10px}
+
+.done span{text-decoration:line-through;color:#777}
+
+nav{position:fixed;bottom:0;left:0;right:0;background:#111;border-top:1px solid #333;display:flex;justify-content:space-around;padding:9px 0 calc(9px + env(safe-area-inset-bottom));z-index:5}
+
+nav button{background:none;color:#999;padding:7px 4px;font-size:11px}
+
+nav button.active{background:#303030;color:white}
+
+.empty{color:#888;padding:12px 0}
+
+</style>
+
+</head>
+
+<body>
+
+<header>MY STUDY.</header>
+
+<section id="home" class="page active">
+
+<h1>今日の計画。</h1><div class="muted" id="dateLabel"></div>
+
+<div class="stats">
+
+<div class="stat"><small>今日の勉強時間</small><div class="big" id="todayTime">0分</div></div>
+
+<div class="stat"><small>Todo達成</small><div class="big" id="todoCount">0 / 0</div></div>
+
+</div>
+
+<div class="card"><h2>勉強タイマー</h2>
+
+<label>教科</label><select id="timerSub"><option>数学</option><option>英語</option><option>国語</option><option>理科</option><option>社会</option><option>その他</option></select>
+
+<div class="big" id="clock" style="text-align:center;font-size:38px">00:00:00</div>
+
+<div class="actions"><button id="timerBtn" onclick="timerToggle()">▶ スタート</button><button class="secondary" onclick="timerReset()">リセット</button></div>
+
+</div>
+
+<div class="card"><h2>今日の時間割</h2><div id="homeSchedule"></div></div>
+
+<div class="card"><h2>明日の準備</h2><div id="homePrep"></div><button onclick="go('prep')">持ち物を確認 →</button></div>
+
+<div class="card"><h2>今日のTodo</h2><div id="homeTodo"></div><button class="secondary" onclick="go('todo')">Todoを管理 →</button></div>
+
+</section>
+
+<section id="schedule" class="page">
+
+<h1>時間割。</h1><div class="muted">曜日別＋日付別で登録できるよ</div>
+
+<div class="card"><label>表示する日付</label><input type="date" id="viewDate" onchange="render()"><div id="daySchedule"></div></div>
+
+<div class="card"><h2>時間割を追加</h2>
+
+<label>登録方法</label><select id="mode"><option value="weekly">曜日ごと（毎週）</option><option value="dated">日付ごと（その日だけ）</option></select>
+
+<label>曜日</label><select id="weekday"><option value="1">月曜日</option><option value="2">火曜日</option><option value="3">水曜日</option><option value="4">木曜日</option><option value="5">金曜日</option><option value="6">土曜日</option><option value="0">日曜日</option></select>
+
+<label>日付（その日だけの場合）</label><input type="date" id="specificDate">
+
+<label>何時間目？</label><select id="period"><option>1時間目</option><option>2時間目</option><option>3時間目</option><option>4時間目</option><option>5時間目</option><option>6時間目</option><option>7時間目</option></select>
+
+<label>教科・予定</label><input id="subject" placeholder="例：数学">
+
+<label>その授業の持ち物（カンマ区切り）</label><input id="subjectItems" placeholder="教科書,ノート,ワーク">
+
+<button style="width:100%;margin-top:14px" onclick="addSchedule()">＋ 追加する</button>
+
+</div>
+
+<div class="card"><h2>登録済み</h2><div id="allSchedules"></div></div>
+
+</section>
+
+<section id="prep" class="page">
+
+<h1>持ち物。</h1><div class="muted">日付ごとの持ち物をチェック</div>
+
+<div class="card"><label>準備する日</label><input type="date" id="prepDate" onchange="render()"><div id="prepList"></div></div>
+
+<div class="card"><h2>持ち物を追加</h2><label>持ち物の名前</label><input id="itemName" placeholder="例：体育着"><button style="width:100%;margin-top:12px" onclick="addItem()">＋ 持ち物を追加</button></div>
+
+</section>
+
+<section id="todo" class="page">
+
+<h1>Todo。</h1><div class="muted">やることを管理しよう</div>
+
+<div class="card"><label>やること</label><input id="todoText" placeholder="数学のワークをやる">
+
+<label>期限</label><input type="date" id="todoDue">
+
+<label>優先度</label><select id="priority"><option>普通</option><option>高</option><option>低</option></select>
+
+<button style="width:100%;margin-top:12px" onclick="addTodo()">＋ Todoを追加</button></div>
+
+<div class="card"><h2>Todo一覧</h2><div id="todoList"></div></div>
+
+</section>
+
+<section id="records" class="page">
+
+<h1>勉強記録。</h1><div class="muted">積み重ねを見える化</div>
+
+<div class="stats"><div class="stat"><small>総勉強時間</small><div class="big" id="allTime">0分</div></div><div class="stat"><small>記録した日数</small><div class="big" id="studyDays">0日</div></div></div>
+
+<div class="card"><h2>教科別の合計</h2><div id="subjectStats"></div></div>
+
+<div class="card"><h2>最近の記録</h2><div id="recordList"></div><button class="danger" onclick="clearRecords()">記録を削除</button></div>
+
+</section>
+
+<nav>
+
+<button class="active" data-page="home" onclick="go('home')">⌂<br>ホーム</button>
+
+<button data-page="schedule" onclick="go('schedule')">▦<br>時間割</button>
+
+<button data-page="prep" onclick="go('prep')">✓<br>持ち物</button>
+
+<button data-page="todo" onclick="go('todo')">☷<br>Todo</button>
+
+<button data-page="records" onclick="go('records')">▥<br>記録</button>
+
+</nav>
+
+<script>
+
+const $=id=>document.getElementById(id);
+
+const read=(k,d=[])=>{try{return JSON.parse(localStorage.getItem(k))||d}catch(e){return d}};
+
+const save=(k,v)=>localStorage.setItem(k,JSON.stringify(v));
+
+let schedules=read('studySchedules'),items=read('studyItems'),todos=read('studyTodos'),records=read('studyRecords');
+
+let running=false,start=0,elapsed=0,interval=null;
+
+const today=()=>{let d=new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')};
+
+const addDays=n=>{let d=new Date();d.setDate(d.getDate()+n);return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')};
+
+const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+
+const fmt=s=>{let h=Math.floor(s/3600),m=Math.floor(s%3600/60),sec=s%60;return [h,m,sec].map(v=>String(v).padStart(2,'0')).join(':')};
+
+const mins=s=>Math.floor(s/60)+'分';
+
+function go(id){document.querySelectorAll('.page').forEach(p=>p.classList.toggle('active',p.id===id));document.querySelectorAll('nav button').forEach(b=>b.classList.toggle('active',b.dataset.page===id));render();window.scrollTo(0,0)}
+
+function dayList(date){let day=new Date(date+'T12:00:00').getDay();return schedules.filter(s=>(s.mode==='dated'&&s.date===date)||(s.mode==='weekly'&&s.day===day)).sort((a,b)=>a.period.localeCompare(b.period,'ja'))}
+
+function addSchedule(){let subject=$('subject').value.trim();if(!subject)return alert('教科・予定を入力してね');let mode=$('mode').value;schedules.push({id:Date.now(),mode,day:+$('weekday').value,date:$('specificDate').value||$('viewDate').value,period:$('period').value,subject,items:$('subjectItems').value.split(/[,、]/).map(x=>x.trim()).filter(Boolean)});save('studySchedules',schedules);$('subject').value='';$('subjectItems').value='';render();alert('時間割に追加したよ！')}
+
+function delSchedule(id){schedules=schedules.filter(s=>s.id!==id);save('studySchedules',schedules);render()}
+
+function addItem(){let name=$('itemName').value.trim();if(!name)return alert('持ち物を入力してね');items.push({id:Date.now(),date:$('prepDate').value||addDays(1),name});save('studyItems',items);$('itemName').value='';render()}
+
+function getItems(date){let a=[];dayList(date).forEach(s=>s.items.forEach(name=>a.push({name,from:s.subject})));items.filter(x=>x.date===date).forEach(x=>a.push({name:x.name,from:'追加'}));return a.filter((x,i,arr)=>arr.findIndex(y=>y.name===x.name)===i)}
+
+function checkItem(key,val){let c=read('studyChecked',{});c[key]=val;save('studyChecked',c)}
+
+function addTodo(){let text=$('todoText').value.trim();if(!text)return alert('Todoを入力してね');todos.push({id:Date.now(),text,due:$('todoDue').value,priority:$('priority').value,done:false});save('studyTodos',todos);$('todoText').value='';render()}
+
+function toggleTodo(id){todos=todos.map(t=>t.id===id?{...t,done:!t.done}:t);save('studyTodos',todos);render()}
+
+function delTodo(id){todos=todos.filter(t=>t.id!==id);save('studyTodos',todos);render()}
+
+function todoHTML(t){return `<div class="item ${t.done?'done':''}"><input type="checkbox" ${t.done?'checked':''} onchange="toggleTodo(${t.id})"><span>${esc(t.text)}<br><small>${t.due?'期限 '+esc(t.due)+' ・ ':''}優先度 ${esc(t.priority)}</small></span><button class="danger" onclick="delTodo(${t.id})">×</button></div>`}
+
+function timerToggle(){if(!running){running=true;start=Date.now();$('timerBtn').textContent='■ ストップ';interval=setInterval(updateClock,500)}else{elapsed+=Math.floor((Date.now()-start)/1000);running=false;clearInterval(interval);$('timerBtn').textContent='▶ スタート';if(elapsed>0){records.unshift({date:today(),subject:$('timerSub').value,seconds:elapsed});save('studyRecords',records);elapsed=0}render()}}
+
+function updateClock(){$('clock').textContent=fmt(elapsed+(running?Math.floor((Date.now()-start)/1000):0))}
+
+function timerReset(){if(running){running=false;clearInterval(interval)}elapsed=0;$('clock').textContent='00:00:00';$('timerBtn').textContent='▶ スタート'}
+
+function clearRecords(){if(confirm('勉強記録をすべて削除する？')){records=[];save('studyRecords',records);render()}}
+
+function render(){
+
+let d=$('viewDate').value||today(),pd=$('prepDate').value||addDays(1);
+
+$('dateLabel').textContent=today();$('todayTime').textContent=mins(records.filter(r=>r.date===today()).reduce((a,r)=>a+r.seconds,0));$('todoCount').textContent=todos.filter(t=>t.done).length+' / '+todos.length;
+
+let ds=dayList(d);$('daySchedule').innerHTML=ds.map(s=>`<div class="item"><span><b>${esc(s.period)}</b><br>${esc(s.subject)}<br><small>${esc(s.items.join('・')||'持ち物なし')}</small></span><button class="danger" onclick="delSchedule(${s.id})">削除</button></div>`).join('')||'<div class="empty">時間割はまだないよ</div>';
+
+$('allSchedules').innerHTML=schedules.map(s=>`<div class="item"><span>${s.mode==='weekly'?'毎週 '+['日','月','火','水','木','金','土'][s.day]+'曜':esc(s.date)}<br>${esc(s.period)}：${esc(s.subject)}</span><button class="danger" onclick="delSchedule(${s.id})">削除</button></div>`).join('')||'<div class="empty">登録なし</div>';
+
+let checked=read('studyChecked',{});
+
+$('prepList').innerHTML=getItems(pd).map(x=>`<div class="item"><input type="checkbox" ${checked[pd+'|'+x.name]?'checked':''} onchange="checkItem('${esc(pd+'|'+x.name)}',this.checked)"><span>${esc(x.name)}<br><small>${esc(x.from)}</small></span></div>`).join('')||'<div class="empty">持ち物はまだないよ。時間割に登録してみよう！</div>';
+
+$('homeSchedule').innerHTML=dayList(today()).map(s=>`<div class="item"><span>${esc(s.period)}　${esc(s.subject)}</span></div>`).join('')||'<div class="empty">時間割を登録しよう</div>';
+
+$('homePrep').innerHTML=getItems(addDays(1)).map(x=>`<div class="item"><span>${esc(x.name)}</span></div>`).join('')||'<div class="empty">明日の持ち物はまだないよ</div>';
+
+$('todoList').innerHTML=todos.map(todoHTML).join('')||'<div class="empty">Todoを追加してね</div>';
+
+$('homeTodo').innerHTML=todos.filter(t=>!t.done).slice(0,3).map(todoHTML).join('')||'<div class="empty">Todoは全部完了！</div>';
+
+let total=records.reduce((a,r)=>a+r.seconds,0);$('allTime').textContent=mins(total);$('studyDays').textContent=new Set(records.map(r=>r.date)).size+'日';
+
+let subjects={};records.forEach(r=>subjects[r.subject]=(subjects[r.subject]||0)+r.seconds);
+
+$('subjectStats').innerHTML=Object.entries(subjects).map(([s,n])=>`<div class="item"><span>${esc(s)}</span><b>${mins(n)}</b></div>`).join('')||'<div class="empty">記録はまだないよ</div>';
+
+$('recordList').innerHTML=records.slice(0,20).map(r=>`<div class="item"><span>${esc(r.date)}<br><small>${esc(r.subject)}</small></span><b>${mins(r.seconds)}</b></div>`).join('')||'<div class="empty">タイマーを使って記録しよう</div>';
+
+}
+
+$('viewDate').value=today();$('prepDate').value=addDays(1);render();
+
+</script>
+
+</body>
+
+</html>
